@@ -1,0 +1,59 @@
+﻿@model testapp.Models.GroupModel
+@{
+    ViewData["Title"] = "Groups";
+}
+
+<form action="/home/Groups" method="post">
+  <div class="mb-3">
+    <label for="inputName" class="form-label">Group Name</label>
+    <input type="text" class="form-control" id="inputName" asp-for="GroupName">
+  </div>
+  <div class="mb-3">
+    <label for="inputYear" class="form-label">Year</label>
+    <input type="number" class="form-control" id="inputYear" asp-for="Year">
+  </div>
+  <div class="mb-3">
+    <label for="inputProgram" class="form-label">Program</label>
+    <input type="text" class="form-control" id="inputProgram" asp-for="Program">
+  </div>
+  <div class="mb-3">
+    <label for="inputPresident" class="form-label">President of the group</label>
+    <input type="text" class="form-control" id="inputPresident" asp-for="President">
+  </div>
+  <div class="mb-3">
+    <label for="inputGroupYear" class="form-label">Group year</label>
+    <input type="number" class="form-control" id="inputGroupYear" asp-for="GroupYear">
+  </div>
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+<div class="container">
+    @if (ViewBag.groups != null && ViewBag.groups.Count >= 1)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">GroupName</th>
+                    <th scope="col">Year</th>
+                    <th scope="col">Program</th>
+                    <th scope="col">President</th>
+                    <th scope="col">GroupYear</th>
+                </tr>
+            </thead>
+          <tbody>
+              @foreach(var group in ViewBag.groups)
+                {
+                    <tr>
+                        <td>@group.GroupName</td>
+                        <td>@group.Year</td>
+                        <td>@group.Program</td>
+                        <td>@group.President</td>
+                        <td>@group.GroupYear</td>
+                    </tr>
+                }
+                
+          </tbody>
+        </table>
+
+    }
+</div>    
