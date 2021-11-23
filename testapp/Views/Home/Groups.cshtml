@@ -1,4 +1,5 @@
 ﻿@model testapp.Models.GroupModel
+
 @{
     ViewData["Title"] = "Groups";
 }
@@ -38,18 +39,37 @@
                     <th scope="col">Program</th>
                     <th scope="col">President</th>
                     <th scope="col">GroupYear</th>
+                    
                 </tr>
             </thead>
           <tbody>
-              @foreach(var group in ViewBag.groups)
+              @foreach(var AddGroups in ViewBag.groups)
                 {
                     <tr>
-                        <td>@group.GroupName</td>
-                        <td>@group.Year</td>
-                        <td>@group.Program</td>
-                        <td>@group.President</td>
-                        <td>@group.GroupYear</td>
+                        
+                        <td>
+                            <form action="/home/GroupDelete" method="post">
+                                <input type="hidden" asp-for="Id" value="@AddGroups.Id">
+                                <button type="submit" class="btn alert-danger">Delete</button>
+                            </form>
+                        </td>
+                        <td>@AddGroups.GroupName</td>
+                        <td>@AddGroups.Year</td>
+                        <td>@AddGroups.Program</td>
+                        <td>@AddGroups.President</td>
+                        <td>@AddGroups.GroupYear</td>
                     </tr>
+                     <tr>
+                        <td colspan="4">
+                            <table class="table mb-0">
+                              <tr>
+                                  <td></td>
+                                  <td> </td>
+                                  <td> </td>
+                              </tr>
+                            </table>
+                        </td>
+                     </tr>
                 }
                 
           </tbody>
