@@ -12,6 +12,7 @@ namespace testapp.Models
     
         public string LastName { get; set; }
         public int PhoneNumber { get; set; }
+        public int GroupForeignKey { get; set; }
         [Required]
         public GroupModel Group { get; set; }
     }

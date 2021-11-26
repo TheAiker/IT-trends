@@ -16,7 +16,8 @@ namespace testapp.Models
         public int GroupYear { get; set; }
 
         public ProgramsModel Program { get; set; }
-        
-        public virtual ICollection<StudentModel> Students{ get; set; }
+        public List<StudentModel> Students { get; set; }
+
+        //public virtual ICollection<StudentModel> Students{ get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,7 +33,7 @@ namespace testapp.Controllers
 
         public IActionResult Groups()
         {
-            List<GroupModel> AddGroups = new List<GroupModel>();
+            List<GroupModel> AddGroups = new();
             using(var db = new TestContext())
             {
                 AddGroups = db.Groups.ToList();
@@ -40,17 +41,25 @@ namespace testapp.Controllers
             ViewBag.Groups = AddGroups;
             return View();
         }
-    /*    public IActionResult Students()
-        {
-            List<StudentModel> AddStudents = new List<StudentModel>();
-            using(var db = new TestContext())
-            {
-                AddStudents = db.Students.ToList();
-            }
-            ViewBag.Students = AddStudents;
-            return View();
-        }
-    */
+ 
+    //    [HttpGet]
+    //    public IActionResult GroupStudents(int GroupId)
+    //    {
+    //        var db = new TestContext();
+    //
+    //        GroupModel selectedGroup = db.Groups.Single(group => group.Id == GroupId);
+    //        List<StudentModel> foundStudents = selectedGroup.Students.ToList();
+    //        var studentsJson = Newtonsoft.Json.JsonConvert.SerializeObject(foundStudents);
+    //
+    //        if (string.IsNullOrEmpty(studentsJson))
+    //        {
+    //            return NotFound();
+    //        }
+    //
+    //        return Content(studentsJson);
+    //
+    //    }
+
         [HttpPost]
         public IActionResult AddGroup(GroupModel group)
         {
@@ -80,14 +89,19 @@ namespace testapp.Controllers
             using (var db = new TestContext())
             {
                 var foundGroups = db.Groups.ToList();
-                var groupsJson = Newtonsoft.Json.JsonConvert.SerializeObject(foundGroups);
+                foundGroups.ForEach(group => {
+                    group.Students = db.Students.Where(st => st.GroupForeignKey == group.Id).ToList();
+                });
+                var groupsJson = Newtonsoft.Json.JsonConvert.SerializeObject(foundGroups, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
                 if (string.IsNullOrEmpty(groupsJson))
                 {
                     return NotFound();
                 }
                 return Content(groupsJson);
             }
-            return null;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
