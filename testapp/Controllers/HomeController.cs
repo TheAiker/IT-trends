@@ -73,7 +73,7 @@ namespace testapp.Controllers
                 {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 });
-                return Content("'status': 'zaebis'");
+                return Content("'status': 'gud'");
             }
         }
         [HttpPost]
