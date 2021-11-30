@@ -61,18 +61,33 @@ namespace testapp.Controllers
     //    }
 
         [HttpPost]
-        public IActionResult AddGroup(GroupModel group)
+        [Route("api/group/create")]
+        public IActionResult AddGroup([FromBody] GroupModel group)
         {
             using (var db = new TestContext())
             {
                 db.Groups.Add(group);
                 db.SaveChanges();
+
+                var groupsJson = Newtonsoft.Json.JsonConvert.SerializeObject(group, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
+                return Content("'status': 'zaebis'");
+            }
+        }
+        [HttpPost]
+        public IActionResult CreateStudent([FromBody] StudentModel student)
+        {
+            using (var db = new TestContext())
+            {
+                db.Students.Add(student);
+                db.SaveChanges();
             }
             return View();
         }
-
         [HttpPost]
-        public IActionResult GroupDelete(int Id)
+        public IActionResult GroupDelete([FromBody]  int Id)
         {
             using (var db = new TestContext())
             {
@@ -80,10 +95,11 @@ namespace testapp.Controllers
                 db.Groups.Remove(group);  
                 db.SaveChanges();
             }
-            return View("~/Views/Home/Groups.cshtml");
+            return View();
         }
 
         [HttpGet]
+        [Route("api/groups/index")]
         public IActionResult Groups(HttpRequestMessage request)
         {
             using (var db = new TestContext())
