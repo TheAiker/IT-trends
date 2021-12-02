@@ -4,9 +4,11 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using testapp.Models;
 
@@ -77,6 +79,7 @@ namespace testapp.Controllers
             }
         }
         [HttpPost]
+        [Route("api/group/addStudent")]
         public IActionResult CreateStudent([FromBody] StudentModel student)
         {
             using (var db = new TestContext())
@@ -84,15 +87,28 @@ namespace testapp.Controllers
                 db.Students.Add(student);
                 db.SaveChanges();
             }
-            return View();
+            return Content("'status': 'veri gud'");
         }
         [HttpPost]
+        [Route("api/group/deleteGroup")]
         public IActionResult GroupDelete([FromBody]  int Id)
         {
             using (var db = new TestContext())
             {
                 var group = db.Groups.Find(Id);
                 db.Groups.Remove(group);  
+                db.SaveChanges();
+            }
+            return Content("'status': 'beri goog'");
+        }
+        [HttpPost]
+        [Route("api/group/deleteStudent")]
+        public IActionResult StudentDelete([FromBody] int Id)
+        {
+            using (var db = new TestContext())
+            {
+                var student = db.Students.Find(Id);
+                db.Students.Remove(student);
                 db.SaveChanges();
             }
             return View();
@@ -119,12 +135,41 @@ namespace testapp.Controllers
                 return Content(groupsJson);
             }
         }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost]
+        [Route("api/groups/images")]
+        public IActionResult SavePhoto()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            try
+            {
+                var photo = Request.Form.Files[0];
+                var folderName = Path.Combine("Resources", "images");
+                var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
+
+                if (photo.Length > 0)
+                {
+                    var photoName = ContentDispositionHeaderValue.Parse(photo.ContentDisposition).FileName.Trim('"');
+                    var fullPath = Path.Combine(pathToSave, photoName);
+                    var dbPath = Path.Combine(folderName, photoName);
+
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        photo.CopyTo(stream);
+                    }
+
+                    return Ok(new {dbPath});
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(500, $"Internal server error: ");
+            }
         }
+
 
     }
 }
