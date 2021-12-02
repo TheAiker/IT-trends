@@ -111,7 +111,7 @@ namespace testapp.Controllers
                 db.Students.Remove(student);
                 db.SaveChanges();
             }
-            return View();
+            return Content("'status': 'beri goog'");
         }
 
         [HttpGet]
@@ -135,38 +135,69 @@ namespace testapp.Controllers
                 return Content(groupsJson);
             }
         }
+
+
         [HttpPost]
         [Route("api/groups/images")]
         public IActionResult SavePhoto()
         {
-            try
+            using (var db = new TestContext())
             {
-                var photo = Request.Form.Files[0];
-                var folderName = Path.Combine("Resources", "images");
-                var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
-
-                if (photo.Length > 0)
+                try
                 {
-                    var photoName = ContentDispositionHeaderValue.Parse(photo.ContentDisposition).FileName.Trim('"');
-                    var fullPath = Path.Combine(pathToSave, photoName);
-                    var dbPath = Path.Combine(folderName, photoName);
+                    var nvc = Request.Form;
+                    var photo = nvc.Files[0];
+                    var folderName = Path.Combine("Resources", "images");
+                    var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
 
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
+
+                    if (photo.Length > 0)
                     {
-                        photo.CopyTo(stream);
+                        var photoName = ContentDispositionHeaderValue.Parse(photo.ContentDisposition).FileName.Trim('"');
+                        var fullPath = Path.Combine(pathToSave, photoName);
+                        var dbPath = Path.Combine(folderName, photoName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            photo.CopyTo(stream);
+                        }
+
+                        var student = new StudentModel();
+
+                        student.ImgFile = dbPath;
+                        if (!string.IsNullOrEmpty(nvc["FirstName"]))
+                        {
+                            student.FirstName = nvc["FirstName"]; ;
+                        }
+
+                        if (!string.IsNullOrEmpty(nvc["LastName"]))
+                        {
+                            student.LastName = nvc["LastName"];
+                        }
+
+                        if (!string.IsNullOrEmpty(nvc["PhoneNumber"]))
+                        {
+                            student.PhoneNumber = Int32.Parse(nvc["PhoneNumber"]);
+                        }
+
+                        if (!string.IsNullOrEmpty(nvc["GroupForeignKey"]))
+                        {
+                            student.GroupForeignKey = Int32.Parse(nvc["GroupForeignKey"]);
+                        }
+                        db.Students.Add(student);
+                        db.SaveChanges();
+                        return Ok(new { dbPath });
                     }
-
-                    return Ok(new {dbPath});
+                    else
+                    {
+                        return BadRequest();
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    return BadRequest();
-                }
-            }
-            catch (Exception)
-            {
 
-                return StatusCode(500, $"Internal server error: ");
+                    return StatusCode(500, $"Internal server error: ");
+                }
             }
         }
 
