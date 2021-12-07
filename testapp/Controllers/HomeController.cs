@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using testapp.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace testapp.Controllers
 {
@@ -139,7 +140,7 @@ namespace testapp.Controllers
 
         [HttpPost]
         [Route("api/groups/images")]
-        public IActionResult SavePhoto()
+        public IActionResult SavePhoto(HttpRequest request)
         {
             using (var db = new TestContext())
             {
@@ -150,24 +151,14 @@ namespace testapp.Controllers
                     var folderName = Path.Combine("Resources", "images");
                     var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
 
-
-                    if (photo.Length > 0)
+                    if (request.Form.Files != null && request.Form.Files.Count > 0)
                     {
-                        var photoName = ContentDispositionHeaderValue.Parse(photo.ContentDisposition).FileName.Trim('"');
-                        var fullPath = Path.Combine(pathToSave, photoName);
-                        var dbPath = Path.Combine(folderName, photoName);
-
-                        using (var stream = new FileStream(fullPath, FileMode.Create))
-                        {
-                            photo.CopyTo(stream);
-                        }
 
                         var student = new StudentModel();
 
-                        student.ImgFile = dbPath;
                         if (!string.IsNullOrEmpty(nvc["FirstName"]))
                         {
-                            student.FirstName = nvc["FirstName"]; ;
+                            student.FirstName = nvc["FirstName"];
                         }
 
                         if (!string.IsNullOrEmpty(nvc["LastName"]))
@@ -186,7 +177,17 @@ namespace testapp.Controllers
                         }
                         db.Students.Add(student);
                         db.SaveChanges();
-                        return Ok(new { dbPath });
+
+                        var photoName = student.Id.ToString() + "." + "png";
+                        var fullPath = Path.Combine(pathToSave, photoName);
+
+                        student.ImgFile = photoName;
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            photo.CopyTo(stream);
+                        }
+                        return Ok();
                     }
                     else
                     {
