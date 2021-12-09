@@ -41,80 +41,10 @@ namespace testapp.Controllers
             {
                 AddGroups = db.Groups.ToList();
             }
-            ViewBag.Groups = AddGroups;
-            return View();
-        }
- 
-    //    [HttpGet]
-    //    public IActionResult GroupStudents(int GroupId)
-    //    {
-    //        var db = new TestContext();
-    //
-    //        GroupModel selectedGroup = db.Groups.Single(group => group.Id == GroupId);
-    //        List<StudentModel> foundStudents = selectedGroup.Students.ToList();
-    //        var studentsJson = Newtonsoft.Json.JsonConvert.SerializeObject(foundStudents);
-    //
-    //        if (string.IsNullOrEmpty(studentsJson))
-    //        {
-    //            return NotFound();
-    //        }
-    //
-    //        return Content(studentsJson);
-    //
-    //    }
-
-        [HttpPost]
-        [Route("api/group/create")]
-        public IActionResult AddGroup([FromBody] GroupModel group)
-        {
-            using (var db = new TestContext())
-            {
-                db.Groups.Add(group);
-                db.SaveChanges();
-
-                var groupsJson = Newtonsoft.Json.JsonConvert.SerializeObject(group, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                });
-                return Content("'status': 'gud'");
-            }
-        }
-        [HttpPost]
-        [Route("api/group/addStudent")]
-        public IActionResult CreateStudent([FromBody] StudentModel student)
-        {
-            using (var db = new TestContext())
-            {
-                db.Students.Add(student);
-                db.SaveChanges();
-            }
-            return Content("'status': 'veri gud'");
-        }
-        [HttpPost]
-        [Route("api/group/deleteGroup")]
-        public IActionResult GroupDelete([FromBody]  int Id)
-        {
-            using (var db = new TestContext())
-            {
-                var group = db.Groups.Find(Id);
-                db.Groups.Remove(group);  
-                db.SaveChanges();
-            }
-            return Content("'status': 'beri goog'");
-        }
-        [HttpPost]
-        [Route("api/group/deleteStudent")]
-        public IActionResult StudentDelete([FromBody] int Id)
-        {
-            using (var db = new TestContext())
-            {
-                var student = db.Students.Find(Id);
-                db.Students.Remove(student);
-                db.SaveChanges();
-            }
-            return Content("'status': 'beri goog'");
+            return Ok();
         }
 
+        
         [HttpGet]
         [Route("api/groups/index")]
         public IActionResult Groups(HttpRequestMessage request)
@@ -137,71 +67,141 @@ namespace testapp.Controllers
             }
         }
 
-
         [HttpPost]
-        [Route("api/groups/images")]
-        public IActionResult SavePhoto(HttpRequest request)
+        [Route("api/group/create")]
+        public async Task<ActionResult<GroupModel>> AddGroupie([FromBody] GroupModel group)
         {
             using (var db = new TestContext())
             {
-                try
+                if (group == null)
                 {
-                    var nvc = Request.Form;
-                    var photo = nvc.Files[0];
-                    var folderName = Path.Combine("Resources", "images");
-                    var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
-
-                    if (request.Form.Files != null && request.Form.Files.Count > 0)
-                    {
-
-                        var student = new StudentModel();
-
-                        if (!string.IsNullOrEmpty(nvc["FirstName"]))
-                        {
-                            student.FirstName = nvc["FirstName"];
-                        }
-
-                        if (!string.IsNullOrEmpty(nvc["LastName"]))
-                        {
-                            student.LastName = nvc["LastName"];
-                        }
-
-                        if (!string.IsNullOrEmpty(nvc["PhoneNumber"]))
-                        {
-                            student.PhoneNumber = Int32.Parse(nvc["PhoneNumber"]);
-                        }
-
-                        if (!string.IsNullOrEmpty(nvc["GroupForeignKey"]))
-                        {
-                            student.GroupForeignKey = Int32.Parse(nvc["GroupForeignKey"]);
-                        }
-                        db.Students.Add(student);
-                        db.SaveChanges();
-
-                        var photoName = student.Id.ToString() + "." + "png";
-                        var fullPath = Path.Combine(pathToSave, photoName);
-
-                        student.ImgFile = photoName;
-
-                        using (var stream = new FileStream(fullPath, FileMode.Create))
-                        {
-                            photo.CopyTo(stream);
-                        }
-                        return Ok();
-                    }
-                    else
-                    {
-                        return BadRequest();
-                    }
+                    return BadRequest();
                 }
-                catch (Exception)
-                {
-
-                    return StatusCode(500, $"Internal server error: ");
-                }
+                db.Groups.Add(group);
+                await db.SaveChangesAsync();
+                return Ok();
             }
         }
 
+       /* [HttpPost]
+        [Route("api/group/create")]
+        public IActionResult AddGroup([FromBody] GroupModel group)
+        {
+            using (var db = new TestContext())
+            {
+                db.Groups.Add(group);
+                db.SaveChanges();
+
+                var groupsJson = Newtonsoft.Json.JsonConvert.SerializeObject(group, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
+                return Content("'status': 'gud'");
+            }
+        }
+       */
+
+        [HttpPost]
+        [Route("api/group/addStudent")]
+        public async Task<ActionResult<StudentModel>> CreateStudent([FromBody] StudentModel student)
+        {
+            using (var db = new TestContext())
+            {
+                if (student == null)
+                {
+                    return BadRequest();
+                }
+                db.Students.Add(student);
+                await db.SaveChangesAsync();
+                return Content("'status': 'veri gud'");
+            }            
+        }
+
+        [HttpPost]
+        [Route("api/group/deleteGroup")]
+        public async Task<ActionResult<GroupModel>> GroupDelete([FromBody]  int Id)
+        {
+            using (var db = new TestContext())
+            {
+               GroupModel group = db.Groups.FirstOrDefault(x => x.Id == Id);
+                if (group == null) return NotFound();
+                db.Groups.Remove(group);
+                await db.SaveChangesAsync();
+                return Content("'status': 'beri goog'");
+            }
+        }
+
+
+        [HttpDelete("{Id}")]
+        [Route("api/group/deleteStudent")]
+        public async Task<ActionResult<StudentModel>> StudentDelete([FromBody] int Id)
+        {
+            using (var db = new TestContext())
+            {
+                StudentModel student = db.Students.FirstOrDefault(x => x.Id == Id);
+                
+                if (student == null) return NotFound();
+                db.Students.Remove(student);
+                await db.SaveChangesAsync();
+                
+                return Ok(student);
+            }
+
+        }
+
+        [HttpPut]
+        [Route("api/group/updateGroup")]
+        public async Task<ActionResult<GroupModel>> GroupPut(GroupModel group)
+        {
+            using (var db = new TestContext())
+            {
+                if (group == null) {
+                    return BadRequest(); 
+                }
+                if (!db.Groups.Any(x => x.Id == group.Id)) {
+                    return NotFound();
+                }
+                db.Update(group);
+                await db.SaveChangesAsync();
+                return Ok(group);
+            }
+        }
+
+        //save photo
+
+        [HttpPost]
+        [Route("api/group/images")]
+        public async Task<ActionResult<StudentModel>> PostImage([FromForm] StudentModel std)
+        {
+            using var db = new TestContext();
+            {
+                try
+                {                
+                    var image = std.Image;                             
+
+                    if (image != null || image.Length > 0)
+                    {
+                        
+                        var filePath = Path.Combine(("Resources/images"), image.FileName);                    
+                        var photoName = std.Id.ToString() + "." + "png";
+                        var fullPath = Path.Combine(filePath, photoName);
+
+                        std.ImgFile = fullPath;
+                        await using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            image.CopyTo(fileStream);
+                            db.Students.Add(std);
+                            db.SaveChanges();
+                        }
+                    }
+                    return Ok(new { status = true, message = "Student posted" });
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+            }
+        }
 
     }
 }
