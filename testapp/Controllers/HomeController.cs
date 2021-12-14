@@ -149,9 +149,9 @@ namespace testapp.Controllers
 
         }
 
-        [HttpPut]
+        [HttpPut("{Id}")]
         [Route("api/group/updateGroup")]
-        public async Task<ActionResult<GroupModel>> GroupPut(GroupModel group)
+        public async Task<ActionResult<GroupModel>> GroupPut([FromBody] GroupModel group)
         {
             using (var db = new TestContext())
             {
@@ -167,32 +167,54 @@ namespace testapp.Controllers
             }
         }
 
+        [HttpPut("{Id}")]
+        [Route("api/group/updateStudent")]
+        public async Task<ActionResult<StudentModel>> StudentPut([FromForm] StudentModel student)
+        {
+            using (var db = new TestContext())
+            {
+                if (student == null)
+                {
+                    return BadRequest();
+                }
+                if (!db.Students.Any(x => x.Id == student.Id))
+                {
+                    return NotFound();
+                }
+                
+                db.Update(student);
+                await db.SaveChangesAsync();
+                return Ok(student);
+            }
+        }
+
         //save photo
 
         [HttpPost]
         [Route("api/group/images")]
-        public async Task<ActionResult<StudentModel>> PostImage([FromForm] StudentModel std)
+        public async Task<ActionResult<StudentModel>> PostImage([FromForm] StudentModel student)
         {
             using var db = new TestContext();
             {
                 try
                 {                
-                    var image = std.Image;                             
+                    var image = student.Image;                             
 
                     if (image != null || image.Length > 0)
                     {
+                        var filePath = Path.Combine(("Resources/images"), $"{Guid.NewGuid()}-test-{image.FileName}");
                         
-                        var filePath = Path.Combine(("Resources/images"), image.FileName);                    
-                        var photoName = std.Id.ToString() + "." + "png";
-                        var fullPath = Path.Combine(filePath, photoName);
+                        
 
-                        std.ImgFile = fullPath;
                         await using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
+                            
+                            student.ImgFile = filePath;
                             image.CopyTo(fileStream);
-                            db.Students.Add(std);
+                            db.Students.Add(student);
                             db.SaveChanges();
                         }
+
                     }
                     return Ok(new { status = true, message = "Student posted" });
                 }
